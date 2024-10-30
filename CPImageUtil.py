@@ -1,4 +1,4 @@
-from PIL import Image
+from PIL import Image, ImageFilter
 import numpy as np
 import cv2
 
@@ -21,6 +21,8 @@ def convert_from_image_to_cv2(img: Image) -> np.ndarray:
     return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
 
+def readImage(image_path: str) -> Image:
+    return Image.open(image_path)
 
 def print_matrix(matrix):
     height, width = matrix.shape
@@ -51,3 +53,18 @@ def print_matrix2(matrix):
         print('')
     print(']')
 
+def calculateSharpness(image: Image):
+    laplacianFilter = ImageFilter.Kernel((3, 3), (-1, -1, -1, -1, 8, -1, -1, -1, -1), 1, 0)
+    laplacianFilter = ImageFilter.Kernel((3, 3), (0, -1, 0, 0, 4, 0, 0, -1, 0), 1, 0)
+    
+    if image.mode == 'L':
+        grayImage = image
+    else:
+        grayImage = image.convert('L')  # Convert to grayscale
+    laplaceImage = grayImage.filter(laplacianFilter)
+
+    # Calculate variance of the Laplacian image
+    pixels = laplaceImage.getdata()
+    variance = sum(p**2 for p in pixels) / len(pixels) - (sum(pixels) / len(pixels))**2
+
+    return variance

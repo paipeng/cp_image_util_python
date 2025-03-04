@@ -52,6 +52,9 @@ def print_matrix2(matrix):
         print('')
     print(']')
 
+def saveBmpImage(image:Image, filename: str, dpi: float = 600):
+    image.info['dpi'] = (dpi, dpi)
+    image.save(filename, format="bmp", dpi=(dpi, dpi))
 
 def saveTiffImage(image: Image, filename: str, dpi: float = 600):
     image.info['dpi'] = (dpi, dpi)
@@ -134,7 +137,7 @@ def resizeImage(image: Image, width: int, height: int, mode: Image.Resampling = 
     resized_image = image.resize((width, height), mode)
     return resized_image
 
-def downsampling2x(image: Image) -> Image:
+def downsampling2xBinary(image: Image) -> Image:
     resized_image = np.zeros((int(image.height/2), int(image.width/2)), dtype=np.uint8)  # 1 channel
     #resized_image = np.ones((int(image.height), int(image.width)), dtype=np.uint8)  # 1 channel
     resized_image = resized_image * 255
@@ -148,6 +151,17 @@ def downsampling2x(image: Image) -> Image:
             else:
                 resized_image[int((j)/2), int((i)/2)] = 0
     return Image.fromarray(resized_image)
+
+def downsampling2x(image: Image) -> Image:
+    resized_image = np.zeros((int(image.height/2), int(image.width/2)), dtype=np.uint8)  # 1 channel
+    #resized_image = np.ones((int(image.height), int(image.width)), dtype=np.uint8)  # 1 channel
+    resized_image = resized_image * 255
+    for i in range(1, image.height, 2):
+        for j in range(1, image.width, 2):
+            #resized_image.putpixel((j/2, i/2),image.getpixel((j, i)))
+            resized_image[int((j)/2), int((i)/2)] = image.getpixel((i, j))
+    return Image.fromarray(resized_image)
+
 
 
 def binaryImage(image: Image) -> Image:
@@ -167,10 +181,13 @@ def mean(image: Image) -> {int, int}:
     median = np.median(np_img[:, :])
     return (int)(mean + 0.5), int(median + 0.5)
 
-def crop_image(image: Image, left, top, right, bottom) -> Image:
+def crop_image(image: Image, left: int, top: int, right: int, bottom: int) -> Image:
     width, height = image.size
     if not (0 <= left <= right <= width and 0 <= top <= bottom <= height):
+        print('image size: ', width, '-', height, ' top: ', top, ' bottom: ', bottom, ' left: ', left, ' right: ', right)
         raise ValueError("Invalid crop area.")
     cropped_img = image.crop((left, top, right, bottom))
     return cropped_img
-        
+
+def convertBinary(image: Image) -> Image:
+    return image.convert("L")
